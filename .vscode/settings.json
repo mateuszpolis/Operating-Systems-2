@@ -1,0 +1,8 @@
+{
+  "files.associations": {
+    ".fantomasignore": "ignore",
+    "errno.h": "c",
+    "signal.h": "c",
+    "stdio.h": "c"
+  }
+}
