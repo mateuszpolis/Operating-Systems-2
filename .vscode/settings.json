@@ -3,6 +3,7 @@
     ".fantomasignore": "ignore",
     "errno.h": "c",
     "signal.h": "c",
-    "stdio.h": "c"
+    "stdio.h": "c",
+    "limits.h": "c"
   }
 }
