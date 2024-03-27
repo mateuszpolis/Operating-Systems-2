@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -45,11 +46,17 @@ void process_request(mqd_t mq, char operation) {
   char client_queue_name[64];
   ssize_t bytes_read;
   int result = 0;
+  char error_buffer[MAX_MSG_SIZE];
 
   bytes_read = mq_receive(mq, (char *)&req, sizeof(req), NULL);
   if (bytes_read < 0) {
-    perror("Error receiving message");
-    return;
+    if (errno == EMSGSIZE) {
+      mq_receive(mq, error_buffer, MAX_MSG_SIZE, NULL);
+      fprintf(stderr, "Message too long: %s\n", error_buffer);
+      return;
+    } else {
+      perror("Receiving request");
+    }
   }
 
   switch (operation) {
