@@ -54,15 +54,18 @@ int main(int argc, char **argv) {
   if (mq_server == (mqd_t)-1)
     ERR("mq_open server");
 
-  request_msg req;
-  response_msg resp;
   ssize_t bytes_read;
 
-  req.client_pid = getpid();
+  char msg_buffer[MSG_BUFFER_SIZE];
+    int num1, num2;
+    int resp;
+
   struct timespec ts;
-  while (scanf("%d %d", &req.num1, &req.num2) == 2) {
-    if (mq_send(mq_server, (const char *)&req, sizeof(req), 0) == -1)
-      ERR("mq_send to server");
+  while (scanf("%d %d", &num1, &num2) == 2) {
+    snprintf(msg_buffer, sizeof(msg_buffer), "%d %d %d", num1, num2, getpid());
+
+        if (mq_send(mq_server, msg_buffer, strlen(msg_buffer) + 1, 0) == -1)
+            ERR("mq_send to server");
 
     // Set timeout for mq_timedreceive
     clock_gettime(CLOCK_REALTIME, &ts);
@@ -70,7 +73,8 @@ int main(int argc, char **argv) {
     ts.tv_nsec += 100 * 1000000; // 100 milliseconds converted to nanoseconds
 
     bytes_read =
-        mq_timedreceive(mq_client, (char *)&resp, sizeof(resp), NULL, &ts);
+        mq_timedreceive(mq_client, msg_buffer, strlen(msg_buffer), NULL, &ts);
+    sscanf(msg_buffer, "%d", &resp);
     if (bytes_read == -1) {
       if (errno == ETIMEDOUT) {
         printf("Response timed out\n");

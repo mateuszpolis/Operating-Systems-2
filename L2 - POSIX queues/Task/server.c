@@ -40,49 +40,46 @@ void setup_sigint_handling() {
 }
 
 void process_request(mqd_t mq, char operation) {
-  request_msg req;
-  response_msg resp;
-  mqd_t client_mq;
-  char client_queue_name[64];
-  ssize_t bytes_read;
-  int result = 0;
-  char error_buffer[MAX_MSG_SIZE];
+  char msg_buffer[MSG_BUFFER_SIZE];
+    ssize_t bytes_read;
+    int num1, num2, result;
+    char operation;
+    mqd_t client_mq;
+    int client_pid;
+    response_msg resp;
 
-  bytes_read = mq_receive(mq, (char *)&req, sizeof(req), NULL);
-  if (bytes_read < 0) {
-    if (errno == EMSGSIZE) {
-      mq_receive(mq, error_buffer, MAX_MSG_SIZE, NULL);
-      fprintf(stderr, "Message too long: %s\n", error_buffer);
-      return;
-    } else {
-      perror("Receiving request");
+    bytes_read = mq_receive(mq, msg_buffer, MSG_BUFFER_SIZE, NULL);
+    if (bytes_read < 0) {
+        perror("Receiving request");
+        return;
     }
-  }
-
+    
+    sscanf(msg_buffer, "%d %d %d", &num1, &num2, &client_pid);
+  
   switch (operation) {
   case 's':
-    result = req.num1 + req.num2;
+    result = num1 + num2;
     break;
   case 'd':
-    if (req.num2 == 0) {
+    if (num2 == 0) {
       fprintf(stderr, "Division by zero\n");
       return;
     }
-    result = req.num1 / req.num2;
+    result = num1 / num2;
     break;
   case 'm':
-    if (req.num2 == 0) {
+    if (num2 == 0) {
       fprintf(stderr, "Modulo by zero\n");
       return;
     }
-    result = req.num1 % req.num2;
+    result = num1 % num2;
     break;
   default:
     fprintf(stderr, "Unknown operation\n");
     return;
   }
 
-  snprintf(client_queue_name, sizeof(client_queue_name), "/%d", req.client_pid);
+  snprintf(client_queue_name, sizeof(client_queue_name), "/%d", client_pid);
   client_mq = mq_open(client_queue_name, O_WRONLY);
   if (client_mq == (mqd_t)-1) {
     perror("Opening client queue");
