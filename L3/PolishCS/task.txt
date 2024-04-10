@@ -1,0 +1,41 @@
+The lab should include writing a program for numerical integration by the Monte Carlo method of the dx function. 
+
+The program should use shared memory to work with more than one process. Each successive
+running program should join the calculation and speed it up.
+The running process keeps the results of calculations in private memory every now and then synchronizing with the
+shared memory. After checking N drawn samples, the program should update the counters of drawn and hit samples.
+counts of drawn and hit samples (batch processing).
+In order to coordinate calculations in shared memory, in addition to information about the result of calculations, the counter of cooperating processes should be processed.
+sweep the counter of cooperating processes. At the start of operation, each process should increment the
+counter and decrement it when the job is completed correctly. When the process decrements it to
+zero, the results of the calculation should be summarized and the result of the approximation should be printed to the screen.
+Implementation details are described in the individual steps.
+Note: A new target clean-resources is added in the provided Makefile. It can be used to
+destroy shared memory and the semaphore.
+
+1. 7 p. Use a named shared memory object for inter-process collaboration with a name
+defined by the SHMEM NAME constant. Prepare a shared memory structure containing a process counter
+protected by a shared mutex.
+Write a procedure to initialize the shared memory with correct incrementation of the counters when running the
+mitting subsequent processes. To eliminate the race between the creation of shared memory and
+its initialization, use a named semaphore with a name defined by the SHMEM_SEMAPHORE_NAME constant.
+After the shared memory is properly initialized, the process writes out the number of cooperating processes, sleeps
+2 seconds, and then terminates. Before terminating the process, destroy the shared memory object
+shared in case the last process disconnects.
+
+2. 5 p. Implement the calculation of three parcels (batches) of N points by the Monte Carlo method.
+Get the parameters into the program as described by the usage function. Use the provided
+randomize_points function to calculate one sample packet.
+Add to the shared memory structure two counters describing the number of samples drawn and hit.
+hit. After calculating each packet, update the counters and display their state to the standard output.
+After three iterations of calculations, the program should end with the logic of destroying the shared memory
+shared as in step one.
+Note: It is a good idea to store integration bounds in the shared memory to avoid joining the
+process with other integration bounds. Such a scenario will result in approximation results that do not
+make sense.
+
+3. 5 p. Add support for a SIGINT signal that interrupts the calculation of consecutive point parcels. After
+receiving the signal, the process finishes calculating the current parcel, then proceeds to check the
+the counter of running processes. If the process disconnects last from shared memory, use the function
+summarize calculations to calculate the result of the approximation to output the results to the standard-.
+d output.
